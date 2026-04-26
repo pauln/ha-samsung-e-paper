@@ -7,7 +7,7 @@ A custom integration to enable basic monitoring of and displaying images on Sams
 For the best experience, install via [HACS](https://hacs.xyz/).
 As this repository is not currently included in the HACS defaults, you'll need to [add it to HACS as a custom repository](https://hacs.xyz/docs/faq/custom_repositories) using the following details:
 
-- Repository URL: `https://github.com/pauln/ha-samsung-emdx`
+- Repository URL: `https://github.com/pauln/ha-samsung-e-paper`
 - Category: `Integration`
 
 ## Setup / Configuration
