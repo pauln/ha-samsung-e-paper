@@ -1,0 +1,25 @@
+{
+  "domain": "samsung_emdx",
+  "name": "Samsung E-Paper",
+  "version": "0.0.1",
+  "codeowners": [
+    "@pauln"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/samsung_emdx",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": [
+    "python-samsung-mdc@git+https://github.com/pauln/samsung-mdc.git@emdx"
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "Samsung Electronics",
+      "st": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "modelDescription": "Samsung LFD DMR"
+    }
+  ],
+  "zeroconf": []
+}

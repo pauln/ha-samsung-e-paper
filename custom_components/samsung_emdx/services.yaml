@@ -1,0 +1,72 @@
+upload_image:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: samsung_emdx
+    image:
+      required: true
+      selector:
+        media:
+          accept:
+            - image/*
+    advanced_options:
+      collapsed: true
+      fields:
+        rotation:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 270
+              step: 90
+              mode: slider
+        fit_mode:
+          required: false
+          default: "contain"
+          selector:
+            select:
+              translation_key: fit_mode
+              options:
+                - "stretch"
+                - "contain"
+                - "cover"
+                - "crop"
+        brightness:
+          required: false
+          default: 100
+          selector:
+            number:
+              min: 0
+              max: 200
+              step: 1
+              mode: slider
+        contrast:
+          required: false
+          default: 100
+          selector:
+            number:
+              min: 0
+              max: 300
+              step: 1
+              mode: slider
+        saturation:
+          required: false
+          default: 100
+          selector:
+            number:
+              min: 0
+              max: 300
+              step: 1
+              mode: slider
+        sharpen:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 10
+              step: 0.1
+              mode: slider

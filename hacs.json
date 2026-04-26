@@ -1,0 +1,5 @@
+{
+    "name": "Samsung E-Paper",
+    "domains": ["select", "sensor"],
+    "iot_class": "local_polling"
+}

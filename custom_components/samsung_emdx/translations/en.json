@@ -1,0 +1,86 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "title": "Configure Samsung E-Paper",
+                "data": {
+                    "ip_address": "IP Address",
+                    "name": "Name (leave blank to autodetect)",
+                    "pin": "Device PIN"
+                }
+            },
+            "discovery_confirm": {
+                "title": "Configure Samsung E-Paper",
+                "data": {
+                    "ip_address": "IP Address",
+                    "name": "Name",
+                    "pin": "Device PIN"
+                }
+            },
+            "confirm": {
+                "description": "Do you want to start setup?"
+            }
+        },
+        "abort": {
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        }
+    },
+    "exceptions": {
+        "device_not_found": {
+            "message": "Could not find device with serial number `{serial_number}`."
+        },
+        "invalid_device_id": {
+            "message": "Device `{device_id}` is not a valid Samsung E-Paper device."
+        },
+        "media_download_error": {
+            "message": "Failed to download media: {error}"
+        }
+    },
+    "services": {
+        "upload_image": {
+            "description": "Uploads an image to an Samsung E-Paper device.",
+            "fields": {
+                "device_id": {
+                    "description": "The Samsung E-Paper device to upload the image to.",
+                    "name": "Device"
+                },
+                "fit_mode": {
+                    "description": "How the image is fitted to the display dimensions.",
+                    "name": "Fit mode"
+                },
+                "image": {
+                    "description": "The image to upload to the display.",
+                    "name": "Image"
+                },
+                "rotation": {
+                    "description": "The rotation angle in degrees, applied clockwise.",
+                    "name": "Rotation"
+                },
+                "brightness": {
+                    "description": "Image brightness adjustment, in percent.",
+                    "name": "Brightness"
+                },
+                "contrast": {
+                    "description": "Image contrast adjustment, in percent.",
+                    "name": "Contrast"
+                },
+                "saturation": {
+                    "description": "Image saturation adjustment, in percent.",
+                    "name": "Saturation"
+                },
+                "sharpen": {
+                    "description": "Sharpens image by the given adjustment factor (0 is no change).",
+                    "name": "Sharpen"
+                }
+            },
+            "name": "Upload image",
+            "sections": {
+                "advanced_options": {
+                    "name": "Advanced options"
+                }
+            }
+        }
+    }
+}
