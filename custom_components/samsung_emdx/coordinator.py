@@ -14,6 +14,7 @@ from samsung_mdc.exceptions import MDCError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, LOW_POWER_WAKE_PORT, Orientation
@@ -51,6 +52,12 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._mdc_connection = None
         self._battery_percent = None
         self._orientation = None
+
+        device_registry = dr.async_get(self.hass)
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, self.config_entry.unique_id)}
+        )
+        self._current_version = device_entry.sw_version
 
         self.is_on: bool | None = None
         self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
@@ -119,6 +126,8 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         self._mdc_connection = mdc
                         # Check configured device orientation.
                         await self.get_orientation()
+                        # Check current firmware version.
+                        await self.get_firmware_version()
                         # Notify sensor entities of updated data.
                         self.async_update_listeners()
                         return
@@ -145,6 +154,26 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.async_update_listeners()
 
         return self._orientation
+
+    async def get_firmware_version(self) -> str:
+        """Gets the device's current firmware version."""
+        firmware_version = await self._mdc_connection.software_version(self._display_id)
+
+        if firmware_version[0] != self._current_version:
+            device_registry = dr.async_get(self.hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, self.config_entry.unique_id)}
+            )
+            assert device_entry
+            device_registry.async_update_device(
+                device_entry.id,
+                sw_version=firmware_version[0],
+            )
+            self._current_version = firmware_version[0]
+
+        LOGGER.debug(f"Current firmware version: {self._current_version}")
+
+        return self._current_version
 
     @property
     def battery_percent(self) -> int | None:
