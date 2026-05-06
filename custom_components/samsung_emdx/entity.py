@@ -47,15 +47,6 @@ class SamsungEMDXEntity(CoordinatorEntity[SamsungEMDXDataUpdateCoordinator], Ent
         # TODO: figure out how to determine if low-power wifi device is available.
         return True
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return basic device metadata."""
-        return DeviceInfo(
-            manufacturer=CONF_MANUFACTURER,
-            identifiers={(DOMAIN, str(self._attr_unique_id))},
-            name=str(self.name),
-        )
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.async_refresh()
