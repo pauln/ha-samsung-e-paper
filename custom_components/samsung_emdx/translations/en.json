@@ -81,6 +81,16 @@
                     "name": "Advanced options"
                 }
             }
+        },
+        "sleep": {
+            "description": "Puts a Samsung E-Paper device into sleep mode.",
+            "fields": {
+                "device_id": {
+                    "description": "The Samsung E-Paper device to upload the image to.",
+                    "name": "Device"
+                }
+            },
+            "name": "Sleep"
         }
     }
 }

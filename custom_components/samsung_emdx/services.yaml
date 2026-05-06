@@ -70,3 +70,11 @@ upload_image:
               max: 10
               step: 0.1
               mode: slider
+
+sleep:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: samsung_emdx

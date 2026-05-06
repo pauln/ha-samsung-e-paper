@@ -22,6 +22,7 @@ from .const import DOMAIN, LOGGER, LOW_POWER_WAKE_PORT, Orientation
 type SamsungEMDXConfigEntry = ConfigEntry[SamsungEMDXDataUpdateCoordinator]
 
 MDCOrientation = MDCCommands._COMMON.ORIENTATION_MODE_STATE
+MDCPowerState = MDCCommands.POWER.POWER_STATE
 
 
 class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -143,6 +144,17 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Sends a content URL to the device."""
         await self._mdc_connection.set_content_download(self._display_id, [url])
 
+    async def sleep(self) -> None:
+        """Commands a device to enter sleep mode."""
+        try:
+            async with MDC(self._ip_address, pin=self._pin) as mdc:
+                LOGGER.debug("MDC connection established")
+                await mdc.power(self._display_id, [MDCPowerState.OFF])
+                LOGGER.debug("Sleep command sent successfully")
+                return
+        except MDCError, OSError:
+            LOGGER.debug(f"Couldn't communicate with device; may already be asleep")
+
     async def get_orientation(self) -> Orientation | None:
         """Gets the device's configured orientation."""
         orientation = await self._mdc_connection.osd_menu_orientation(self._display_id)
@@ -168,7 +180,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 device_registry.async_update_device(
                     device_entry.id,
                     sw_version=firmware_version[0],
-            )
+                )
             self._current_version = firmware_version[0]
 
         LOGGER.debug(f"Current firmware version: {self._current_version}")

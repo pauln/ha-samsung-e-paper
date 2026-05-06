@@ -68,6 +68,11 @@ SCHEMA_UPLOAD_IMAGE = vol.Schema(
         ),
     }
 )
+SCHEMA_SLEEP = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    }
+)
 
 
 def _get_entry_for_device(call: ServiceCall) -> SamsungEMDXConfigEntry:
@@ -244,6 +249,16 @@ async def _async_upload_image(call: ServiceCall) -> None:
             entry.runtime_data.upload_task = None
 
 
+async def _async_sleep(call: ServiceCall) -> None:
+    """Handle the sleep service call."""
+    entry = _get_entry_for_device(call)
+    serial_number = entry.unique_id
+    assert serial_number is not None
+
+    LOGGER.debug("Attempting to put device to sleep")
+    await entry.runtime_data.sleep()
+
+
 def _prepare_image(
     image: PILImage.Image,
     params: dict[str, Any] | None,
@@ -360,4 +375,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "upload_image",
         _async_upload_image,
         schema=SCHEMA_UPLOAD_IMAGE,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "sleep",
+        _async_sleep,
+        schema=SCHEMA_SLEEP,
     )
