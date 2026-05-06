@@ -20,12 +20,18 @@ Once everything is set up, the integration can wake the E-Paper device from slee
 
 ## Usage
 
-The integration provides sensors for the following:
+The integration provides the following data:
 
-- Battery level
-- Configured device orientation
+- Battery level (sensor)
+- Firmware version (device metadata)
 
-It also provides a single action, `samsung_emdx.upload_image`, which requires two parameters: the `device` to upload an image to, and the `image` to upload to it.  As the E-Paper display's colours can be a bit muted, some advanced options are available to preprocess the image:
+A Select entity is also provided for the device's orientation, so that you can both see the configured orientation and change it.
+
+### Actions
+
+The `samsung_emdx.sleep` action can be used to instruct a device to enter sleep mode, for maximal power saving.  The `device` parameter should be set to the device to be put to sleep.
+
+The `samsung_emdx.upload_image` action, which changes the image displayed on a device, requires two parameters: the `device` to upload an image to, and the `image` to upload to it.  As the E-Paper display's colours can be a bit muted, some advanced options are available to preprocess the image:
 
 - `brightness` [integer, 0-200, default: 100]: Adjusts image brightness to the specified percentage of original
 - `contrast` [integer, 0-300, default: 100]: Adjusts contrast to the specified percentage of original
