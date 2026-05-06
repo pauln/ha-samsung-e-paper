@@ -57,7 +57,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, self.config_entry.unique_id)}
         )
-        self._current_version = device_entry.sw_version
+        self._current_version = device_entry.sw_version if device_entry else None
 
         self.is_on: bool | None = None
         self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
@@ -164,10 +164,10 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             device_entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, self.config_entry.unique_id)}
             )
-            assert device_entry
-            device_registry.async_update_device(
-                device_entry.id,
-                sw_version=firmware_version[0],
+            if device_entry:
+                device_registry.async_update_device(
+                    device_entry.id,
+                    sw_version=firmware_version[0],
             )
             self._current_version = firmware_version[0]
 
