@@ -69,6 +69,9 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.async_extra_update:
             await self.async_extra_update()
 
+        # Put device to sleep after we're done to save battery.
+        await self.sleep()
+
     async def low_power_wake(self) -> None:
         """Wake the device via its low-power wifi module."""
         if (

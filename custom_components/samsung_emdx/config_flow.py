@@ -58,6 +58,26 @@ class SamsungEpaperConfigFlow(ConfigFlow, domain=DOMAIN):
             return e
         return None
 
+    async def get_model_name(self) -> str:
+        """Gets the device's model name via MDC."""
+        model_name = await self._mdc_connection.model_name(self._display_id)
+
+        if firmware_version[0] != self._current_version:
+            device_registry = dr.async_get(self.hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, self.config_entry.unique_id)}
+            )
+            assert device_entry
+            device_registry.async_update_device(
+                device_entry.id,
+                sw_version=firmware_version[0],
+            )
+            self._current_version = firmware_version[0]
+
+        LOGGER.debug(f"Current firmware version: {self._current_version}")
+
+        return self._current_version
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -34,6 +34,7 @@ class SamsungEMDXEntity(CoordinatorEntity[SamsungEMDXDataUpdateCoordinator], Ent
             manufacturer=CONF_MANUFACTURER,
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=config_entry.data.get("name"),
+            model=config_entry.data.get("model"),
         )
         LOGGER.debug(
             f"Registering entity {self._attr_unique_id}; device: {self._attr_device_info}"
