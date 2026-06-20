@@ -29,6 +29,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for the SamsungEMDX integration."""
 
     config_entry: SamsungEMDXConfigEntry
+    connect_task: asyncio.Task | None = None
     upload_task: asyncio.Task | None = None
 
     def __init__(
@@ -88,6 +89,20 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ):
             return
 
+        current = asyncio.current_task()
+        if (prev := self.connect_task) is not None and not prev.done():
+            LOGGER.debug(
+                f"{self._tag} Connection attempt already in progress; awaiting"
+            )
+            await prev
+            LOGGER.debug(f"{self._tag} Previous connection attempt complete")
+            return
+
+        self.connect_task = current
+
+        # Remove any existing MDC connection handle.
+        self._mdc_connection = None
+
         magic_key = f"{self._low_power_mac.upper()}:E-Paper"
         wake_hash = hashlib.new("sha256")
         wake_hash.update(magic_key.encode())
@@ -95,6 +110,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(0.2)
+        connected = False
         for i in range(1, 11):
             LOGGER.debug(f"{self._tag} Low-power wake attempt {i}/10")
 
@@ -120,33 +136,46 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             for j in range(1, 6):
                 LOGGER.debug(f"{self._tag} MDC connection attempt {j}/5")
-                try:
-                    async with MDC(self._ip_address, pin=self._pin) as mdc:
-                        (
-                            battery_percent,
-                            power_source,
-                            warning_enabled,
-                        ) = await mdc.battery_status(self._display_id)
-                        LOGGER.debug(
-                    f"{self._tag} Battery: {battery_percent}%; power source: {power_source}, warning: {warning_enabled}"
-                        )
-                        sock.close()
-                        self._battery_percent = battery_percent
-                        self._mdc_connection = mdc
-                        # Check configured device orientation.
-                        await self.get_orientation()
-                        # Check current firmware version.
-                        await self.get_firmware_version()
-                        # Notify sensor entities of updated data.
-                        self.async_update_listeners()
-                        return
-                except MDCError, OSError:
-                    pass
-
+                connected = await self._poll_mdc()
+                if connected:
+                    break
                 await asyncio.sleep(2)
+
+            if connected:
+                break
+
+        # Close the low-power wake socket.
         sock.close()
-        self._mdc_connection = None
+
+        if self.connect_task is current:
+            self.connect_task = None
         return
+
+    async def _poll_mdc(self) -> bool:
+        """Polls via MDC to confirm connection and update sensor states."""
+        try:
+            async with MDC(self._ip_address, pin=self._pin) as mdc:
+                (
+                    battery_percent,
+                    power_source,
+                    warning_enabled,
+                ) = await mdc.battery_status(self._display_id)
+                LOGGER.debug(
+                    f"{self._tag} Battery: {battery_percent}%; power source: {power_source}, warning: {warning_enabled}"
+                )
+                self._battery_percent = battery_percent
+                self._mdc_connection = mdc
+                # Check configured device orientation.
+                await self.get_orientation()
+                # Check current firmware version.
+                await self.get_firmware_version()
+                # Notify sensor entities of updated data.
+                self.async_update_listeners()
+                return True
+        except MDCError, OSError:
+            pass
+
+        return False
 
     async def set_content_download(self, url: str) -> None:
         """Sends a content URL to the device."""
@@ -164,6 +193,9 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER.debug(
                 f"{self._tag} Couldn't communicate with device; may already be asleep"
             )
+
+        # Remove any existing MDC connection handle, as the device should now be asleep or disconnected.
+        self._mdc_connection = None
 
     async def get_orientation(self) -> Orientation | None:
         """Gets the device's configured orientation."""

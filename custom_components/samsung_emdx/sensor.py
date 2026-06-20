@@ -64,7 +64,9 @@ class SamsungEMDXBatterySensor(SamsungEMDXEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        await self.async_update()
+
+        # Check for state from the coordinator to avoid re-waking the device.
+        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
