@@ -63,6 +63,11 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.is_on: bool | None = None
         self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
 
+    @property
+    def _tag(self) -> str:
+        """Returns a log tag with the device's serial number."""
+        return f"[{self.config_entry.unique_id}]"
+
     async def _async_update_data(self) -> None:
         """Fetch data from Samsung E-Paper device."""
         await self.low_power_wake()
@@ -91,10 +96,10 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.settimeout(0.2)
         for i in range(1, 11):
-            LOGGER.debug(f"Low-power wake attempt {i}/10")
+            LOGGER.debug(f"{self._tag} Low-power wake attempt {i}/10")
 
             for j in range(1, 11):
-                LOGGER.debug(f"Sending wake message {j}/10")
+                LOGGER.debug(f"{self._tag} Sending wake message {j}/10")
                 encoded_msg = wake_msg.encode()
                 sock.sendto(encoded_msg, (self._low_power_ip, LOW_POWER_WAKE_PORT))
                 try:
@@ -102,7 +107,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     if wake_resp == encoded_msg:
                         # The LP chip returns the wake message as a response on successful wake
                         LOGGER.debug(
-                            "Wake successful; waiting for device to come online"
+                            f"{self._tag} Wake successful; waiting for device to come online"
                         )
                         break
 
@@ -114,7 +119,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await asyncio.sleep(3)
 
             for j in range(1, 6):
-                LOGGER.debug(f"MDC connection attempt {j}/5")
+                LOGGER.debug(f"{self._tag} MDC connection attempt {j}/5")
                 try:
                     async with MDC(self._ip_address, pin=self._pin) as mdc:
                         (
@@ -123,7 +128,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             warning_enabled,
                         ) = await mdc.battery_status(self._display_id)
                         LOGGER.debug(
-                            f"Battery: {battery_percent}%; power source: {power_source}, warning: {warning_enabled}"
+                    f"{self._tag} Battery: {battery_percent}%; power source: {power_source}, warning: {warning_enabled}"
                         )
                         sock.close()
                         self._battery_percent = battery_percent
@@ -151,19 +156,23 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Commands a device to enter sleep mode."""
         try:
             async with MDC(self._ip_address, pin=self._pin) as mdc:
-                LOGGER.debug("MDC connection established")
+                LOGGER.debug(f"{self._tag} MDC connection established")
                 await mdc.power(self._display_id, [MDCPowerState.OFF])
-                LOGGER.debug("Sleep command sent successfully")
+                LOGGER.debug(f"{self._tag} Sleep command sent successfully")
                 return
         except MDCError, OSError:
-            LOGGER.debug(f"Couldn't communicate with device; may already be asleep")
+            LOGGER.debug(
+                f"{self._tag} Couldn't communicate with device; may already be asleep"
+            )
 
     async def get_orientation(self) -> Orientation | None:
         """Gets the device's configured orientation."""
         orientation = await self._mdc_connection.osd_menu_orientation(self._display_id)
         self._orientation = mdc_orientation_to_hass_orientation(orientation[0])
 
-        LOGGER.debug(f"Reported orientation: {self._orientation} ({orientation[0]})")
+        LOGGER.debug(
+            f"{self._tag} Reported orientation: {self._orientation} ({orientation[0]})"
+        )
 
         # Notify sensor entities of updated data.
         self.async_update_listeners()
@@ -186,7 +195,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
             self._current_version = firmware_version[0]
 
-        LOGGER.debug(f"Current firmware version: {self._current_version}")
+        LOGGER.debug(f"{self._tag} Current firmware version: {self._current_version}")
 
         return self._current_version
 
@@ -211,7 +220,7 @@ class SamsungEMDXDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._orientation = mdc_orientation_to_hass_orientation(new_orientation[0])
 
         LOGGER.debug(
-            f"Reported orientation: {self._orientation} ({new_orientation[0]})"
+            f"{self._tag} Reported orientation: {self._orientation} ({new_orientation[0]})"
         )
 
         # Notify sensor entities of updated data.
